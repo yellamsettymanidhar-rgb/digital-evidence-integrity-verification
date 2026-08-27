@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Verification Result — EvidenceGuard{% endblock %}
+{% block page_title %}Verification Result{% endblock %}
+
+{% block content %}
+
+{% if log['result'] == 'MATCH' %}
+<div class="result-stamp verified">
+  <div class="stamp-title">&#10003; INTEGRITY VERIFIED</div>
+  <div class="stamp-sub">The submitted file is byte-for-byte identical to the registered evidence. Status: UNCHANGED.</div>
+</div>
+{% else %}
+<div class="result-stamp compromised">
+  <div class="stamp-title">&#10007; INTEGRITY COMPROMISED</div>
+  <div class="stamp-sub">The submitted file does not match the registered evidence. Status: MODIFIED.</div>
+</div>
+{% endif %}
+
+<div class="card-panel">
+  <h2 class="section-heading" style="margin-top:0;">Hash Comparison</h2>
+
+  <p class="form-text-hint mb-1">Original Hash (recorded at registration)</p>
+  <div class="hash-block" data-hash-original="{{ log['original_hash'] }}">{{ log['original_hash'] }}</div>
+
+  <p class="form-text-hint mb-1 mt-3">Current Hash (computed just now)</p>
+  <div class="hash-block" data-hash-current="{{ log['current_hash'] }}">{{ log['current_hash'] }}</div>
+
+  {% if log['result'] != 'MATCH' %}
+  <p class="form-text-hint mt-2">Highlighted characters show exactly where the two hashes diverge — a visual
+  reminder that even a one-byte change in the underlying file alters roughly half the hash.</p>
+  {% endif %}
+
+  <h2 class="section-heading">Details</h2>
+  <table class="data-table" style="border:none;">
+    <tbody>
+      <tr><td style="width:180px; color:var(--ink-muted);">Evidence ID</td><td><span class="evidence-tag">{{ log['evidence_uid'] }}</span></td></tr>
+      <tr><td style="color:var(--ink-muted);">File Name</td><td>{{ log['original_filename'] }}</td></tr>
+      <tr><td style="color:var(--ink-muted);">Algorithm</td><td>SHA-256</td></tr>
+      <tr><td style="color:var(--ink-muted);">Verified By</td><td>{{ log['verified_by_name'] }}</td></tr>
+      <tr><td style="color:var(--ink-muted);">Verified At</td><td class="mono">{{ log['verified_at'] }} UTC</td></tr>
+    </tbody>
+  </table>
+
+  <a href="{{ url_for('reports.verification_report', log_id=log['id']) }}" class="btn btn-forensic mt-2">Download PDF Report</a>
+  <a href="{{ url_for('evidence.detail', evidence_id=log['evidence_id']) }}" class="btn btn-outline-forensic mt-2">Back to Evidence</a>
+</div>
+
+{% endblock %}

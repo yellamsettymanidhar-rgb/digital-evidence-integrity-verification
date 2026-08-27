@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ item['evidence_uid'] }} — EvidenceGuard{% endblock %}
+{% block page_title %}{{ item['evidence_uid'] }}{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h2 style="font-size:16px; font-weight:600; margin:0;">{{ item['original_filename'] }}</h2>
+          <p class="text-muted-forensic" style="font-size:12.5px; margin-top:2px;">
+            {{ item['file_type'] | upper }} &middot; {{ '{:,}'.format(item['file_size_bytes']) }} bytes
+          </p>
+        </div>
+        {% if item['status'] == 'active' %}
+          <span class="badge-status badge-active">Active</span>
+        {% else %}
+          <span class="badge-status badge-archived">Archived</span>
+        {% endif %}
+      </div>
+
+      <h3 class="section-heading">SHA-256 Hash (Original — Registered)</h3>
+      <div class="hash-block">
+        {{ item['sha256_hash'] }}
+        <button class="copy-btn" data-copy="{{ item['sha256_hash'] }}" style="margin-left:8px;">Copy</button>
+      </div>
+      <p class="form-text-hint">Algorithm: {{ item['hash_algorithm'] }} &middot; Generated: {{ item['uploaded_at'] }} UTC</p>
+
+      <h3 class="section-heading">Details</h3>
+      <table class="data-table" style="border:none;">
+        <tbody>
+          <tr><td style="width:160px; color:var(--ink-muted);">Case Reference</td><td>{{ item['case_reference'] or '—' }}</td></tr>
+          <tr><td style="color:var(--ink-muted);">Description</td><td>{{ item['description'] or '—' }}</td></tr>
+          <tr><td style="color:var(--ink-muted);">Registered By</td><td>{{ item['uploaded_by_name'] }} ({{ item['uploaded_by_username'] }})</td></tr>
+          <tr><td style="color:var(--ink-muted);">Last Verification</td>
+            <td>
+              {% if item['last_verified_status'] == 'VERIFIED' %}
+                <span class="badge-status badge-verified">Verified</span> <span class="mono text-muted-forensic">{{ item['last_verified_at'] }}</span>
+              {% elif item['last_verified_status'] == 'COMPROMISED' %}
+                <span class="badge-status badge-compromised">Compromised</span> <span class="mono text-muted-forensic">{{ item['last_verified_at'] }}</span>
+              {% else %}
+                <span class="badge-status badge-pending">Not yet checked</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="d-flex gap-2 mt-3">
+        <a href="{{ url_for('verify.select', evidence_id=item['id']) }}" class="btn btn-forensic">Verify Integrity</a>
+        <a href="{{ url_for('evidence.download', evidence_id=item['id']) }}" class="btn btn-outline-forensic">Download Original</a>
+        {% if current_user.role == 'admin' %}
+        <form method="POST" action="{{ url_for('evidence.archive', evidence_id=item['id']) }}"
+              data-confirm="{{ 'Reactivate this evidence record?' if item['status']=='archived' else 'Archive this evidence record? It will be excluded from active verification lists.' }}">
+          <button type="submit" class="btn btn-outline-forensic">{{ 'Reactivate' if item['status']=='archived' else 'Archive' }}</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <h2 class="section-heading">Verification History</h2>
+    <div class="card-panel" style="padding:0;">
+      {% if verification_history %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Result</th><th>Verified By</th><th>When</th><th></th></tr></thead>
+          <tbody>
+          {% for v in verification_history %}
+            <tr>
+              <td>{% if v['result'] == 'MATCH' %}<span class="badge-status badge-verified">Verified</span>{% else %}<span class="badge-status badge-compromised">Compromised</span>{% endif %}</td>
+              <td>{{ v['verified_by_name'] }}</td>
+              <td class="mono text-muted-forensic">{{ v['verified_at'] }}</td>
+              <td><a href="{{ url_for('verify.result', log_id=v['id']) }}" class="btn-outline-forensic btn-sm">View Report</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">No verification checks have been run on this evidence yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <h2 class="section-heading" style="margin-top:0;">Chain of Custody</h2>
+    <div class="card-panel">
+      {% if custody_trail %}
+      <div class="timeline">
+        {% for c in custody_trail %}
+        <div class="timeline-item">
+          <div class="timeline-action">{{ c['action'] }}</div>
+          <div class="timeline-meta">{{ c['user_name'] }} ({{ c['role'] }}) &middot; {{ c['timestamp'] }}</div>
+          {% if c['remarks'] %}<div class="timeline-remarks">{{ c['remarks'] }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No custody events recorded.</div>
+      {% endif %}
+      <a href="{{ url_for('audit.chain_of_custody', evidence_id=item['id']) }}" class="form-text-hint">View full custody record &rarr;</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

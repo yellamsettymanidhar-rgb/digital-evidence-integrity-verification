@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — EvidenceGuard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Evidence</div>
+    <div class="stat-value">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card verified">
+    <div class="stat-label">Verified</div>
+    <div class="stat-value">{{ stats.verified }}</div>
+  </div>
+  <div class="stat-card compromised">
+    <div class="stat-label">Compromised</div>
+    <div class="stat-value">{{ stats.compromised }}</div>
+  </div>
+  <div class="stat-card pending">
+    <div class="stat-label">Not Yet Verified</div>
+    <div class="stat-value">{{ stats.unverified }}</div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <h2 class="section-heading">Recent Uploads</h2>
+    <div class="card-panel" style="padding:0;">
+      {% if stats.recent_uploads %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Evidence ID</th><th>File</th><th>Uploaded By</th><th>When</th></tr></thead>
+          <tbody>
+          {% for e in stats.recent_uploads %}
+            <tr>
+              <td><a href="{{ url_for('evidence.detail', evidence_id=e['id']) }}" class="evidence-tag">{{ e['evidence_uid'] }}</a></td>
+              <td>{{ e['original_filename'] }}</td>
+              <td>{{ e['uploaded_by_name'] }}</td>
+              <td class="mono text-muted-forensic">{{ e['uploaded_at'] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><div class="empty-icon">&#128193;</div>No evidence uploaded yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <h2 class="section-heading">Recent Verification Activity</h2>
+    <div class="card-panel" style="padding:0;">
+      {% if stats.recent_verifications %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Evidence ID</th><th>Result</th><th>By</th><th>When</th></tr></thead>
+          <tbody>
+          {% for v in stats.recent_verifications %}
+            <tr>
+              <td><span class="evidence-tag">{{ v['evidence_uid'] }}</span></td>
+              <td>
+                {% if v['result'] == 'MATCH' %}
+                  <span class="badge-status badge-verified">Verified</span>
+                {% else %}
+                  <span class="badge-status badge-compromised">Compromised</span>
+                {% endif %}
+              </td>
+              <td>{{ v['verified_by_name'] }}</td>
+              <td class="mono text-muted-forensic">{{ v['verified_at'] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><div class="empty-icon">&#10003;</div>No verification checks run yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer-box mt-4">
+  <strong>Reminder:</strong> SHA-256 verification confirms file <em>integrity</em> (whether a file has changed
+  since registration) — it does not by itself prove a file's origin or absolute authenticity. Combine hash
+  verification with the chain-of-custody trail for a fuller integrity picture.
+</div>
+
+{% endblock %}

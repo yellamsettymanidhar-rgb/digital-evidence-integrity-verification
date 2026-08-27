@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Evidence Registry — EvidenceGuard{% endblock %}
+{% block page_title %}Evidence Registry{% endblock %}
+
+{% block content %}
+
+<form method="GET" class="card-panel mb-3" style="padding:16px 20px;">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label">Search</label>
+      <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Evidence ID, filename, or hash">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+        <option value="" {{ 'selected' if not status }}>All</option>
+        <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
+        <option value="archived" {{ 'selected' if status == 'archived' }}>Archived</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Type</label>
+      <input type="text" name="type" value="{{ file_type }}" class="form-control" placeholder="pdf, jpg...">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-forensic w-100">Filter</button>
+    </div>
+  </div>
+</form>
+
+<div class="card-panel" style="padding:0;">
+  {% if items %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Evidence ID</th><th>File</th><th>Type</th><th>Size</th>
+          <th>Status</th><th>Last Verification</th><th>Uploaded</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for e in items %}
+        <tr>
+          <td><span class="evidence-tag">{{ e['evidence_uid'] }}</span></td>
+          <td>{{ e['original_filename'] }}</td>
+          <td>{{ e['file_type'] | upper }}</td>
+          <td class="mono">{{ '{:,}'.format(e['file_size_bytes']) }} B</td>
+          <td>
+            {% if e['status'] == 'active' %}
+              <span class="badge-status badge-active">Active</span>
+            {% else %}
+              <span class="badge-status badge-archived">Archived</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if e['last_verified_status'] == 'VERIFIED' %}
+              <span class="badge-status badge-verified">Verified</span>
+            {% elif e['last_verified_status'] == 'COMPROMISED' %}
+              <span class="badge-status badge-compromised">Compromised</span>
+            {% else %}
+              <span class="badge-status badge-pending">Not checked</span>
+            {% endif %}
+          </td>
+          <td class="mono text-muted-forensic">{{ e['uploaded_at'] }}</td>
+          <td><a href="{{ url_for('evidence.detail', evidence_id=e['id']) }}" class="btn-outline-forensic btn-sm">View</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">&#128269;</div>
+    No evidence matches these filters.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

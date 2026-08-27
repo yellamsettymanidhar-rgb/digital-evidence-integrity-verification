@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — EvidenceGuard{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-panel" style="padding:0;">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody>
+          {% for u in users %}
+            <tr>
+              <td>{{ u['full_name'] }}</td>
+              <td class="mono">{{ u['username'] }}</td>
+              <td><span class="role-badge role-{{ u['role'] }}" style="color:var(--ink-muted);">{{ u['role'] }}</span></td>
+              <td>{% if u['is_active'] %}<span class="badge-status badge-active">Active</span>{% else %}<span class="badge-status badge-archived">Inactive</span>{% endif %}</td>
+              <td class="mono text-muted-forensic">{{ u['created_at'] }}</td>
+              <td>
+                {% if u['id'] != current_user.id %}
+                <form method="POST" action="{{ url_for('auth.toggle_user_active', user_id=u['id']) }}"
+                      data-confirm="{{ 'Deactivate' if u['is_active'] else 'Reactivate' }} this account?">
+                  <button type="submit" class="btn-outline-forensic btn-sm">{{ 'Deactivate' if u['is_active'] else 'Reactivate' }}</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <h2 class="section-heading" style="margin-top:0;">Create Account</h2>
+      <form method="POST" action="{{ url_for('auth.create_user') }}">
+        <div class="mb-3">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" name="full_name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" name="username" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" name="password" minlength="8" required>
+          <p class="form-text-hint">Minimum 8 characters. Stored as a salted hash, never in plain text.</p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Role</label>
+          <select class="form-select" name="role">
+            <option value="investigator">Investigator</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-forensic w-100">Create Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

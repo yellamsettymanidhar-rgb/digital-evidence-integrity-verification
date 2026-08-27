@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Verify Integrity — EvidenceGuard{% endblock %}
+{% block page_title %}Verify Integrity{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <form method="POST" action="{{ url_for('verify.run') }}" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label" for="evidence_id">Evidence Record</label>
+          <select class="form-select" id="evidence_id" name="evidence_id" required>
+            <option value="" disabled {{ 'selected' if not preselect_id }}>Select the registered evidence to check against&hellip;</option>
+            {% for e in items %}
+            <option value="{{ e['id'] }}" {{ 'selected' if preselect_id == e['id'] }}>
+              {{ e['evidence_uid'] }} — {{ e['original_filename'] }}
+            </option>
+            {% endfor %}
+          </select>
+          <p class="form-text-hint">This is matched against the SHA-256 hash stored at registration time.</p>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="check_file">File to Verify</label>
+          <input type="file" class="form-control" id="check_file" name="check_file" required>
+          <p class="form-text-hint">Upload the current copy of the file — the one you want to confirm is unaltered.</p>
+        </div>
+
+        <button type="submit" class="btn btn-forensic">Run Integrity Check</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <h2 class="section-heading" style="margin-top:0;">How this works</h2>
+      <p style="font-size:13px; color:var(--ink-muted); line-height:1.7;">
+        The system computes a fresh SHA-256 hash of the file you upload here and compares it, character
+        by character, against the hash recorded when the evidence was originally registered.
+      </p>
+      <p style="font-size:13px; color:var(--ink-muted); line-height:1.7;">
+        Because of SHA-256's <em>avalanche effect</em>, changing even a single byte anywhere in the file —
+        even something as small as re-saving it in the same format — produces a completely different hash.
+        A match means the file is byte-for-byte identical to what was registered.
+      </p>
+      <div class="disclaimer-box">
+        This confirms integrity (no change since registration), not absolute authenticity or origin.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

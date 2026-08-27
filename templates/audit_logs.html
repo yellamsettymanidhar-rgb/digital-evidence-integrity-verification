@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Audit Log — EvidenceGuard{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+
+{% block content %}
+
+<form method="GET" class="card-panel mb-3" style="padding:16px 20px;">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label">Search</label>
+      <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="User, evidence ID, or details">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Action</label>
+      <select name="action" class="form-select">
+        <option value="" {{ 'selected' if not action }}>All actions</option>
+        {% for a in ['LOGIN','LOGIN_FAILED','LOGOUT','EVIDENCE_UPLOADED','UPLOAD_REJECTED','EVIDENCE_VIEWED','EVIDENCE_DOWNLOADED','EVIDENCE_VERIFIED','EVIDENCE_STATUS_CHANGED','REPORT_GENERATED','USER_CREATED','USER_STATUS_CHANGED'] %}
+        <option value="{{ a }}" {{ 'selected' if action == a }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Result</label>
+      <select name="result" class="form-select">
+        <option value="" {{ 'selected' if not result }}>All</option>
+        <option value="SUCCESS" {{ 'selected' if result == 'SUCCESS' }}>Success</option>
+        <option value="FAILURE" {{ 'selected' if result == 'FAILURE' }}>Failure</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-forensic w-100">Filter</button>
+    </div>
+  </div>
+</form>
+
+<div class="card-panel" style="padding:0;">
+  {% if logs %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Timestamp</th><th>Action</th><th>User</th><th>Evidence</th><th>Result</th><th>Details</th></tr></thead>
+      <tbody>
+      {% for l in logs %}
+        <tr>
+          <td class="mono text-muted-forensic">{{ l['timestamp'] }}</td>
+          <td class="mono">{{ l['action'] }}</td>
+          <td>{{ l['user_name'] or '—' }}</td>
+          <td>{% if l['evidence_uid'] %}<span class="evidence-tag">{{ l['evidence_uid'] }}</span>{% else %}—{% endif %}</td>
+          <td>{% if l['result'] == 'SUCCESS' %}<span class="badge-status badge-verified">Success</span>{% else %}<span class="badge-status badge-compromised">Failure</span>{% endif %}</td>
+          <td style="font-size:12.5px; color:var(--ink-muted);">{{ l['details'] or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No audit entries match these filters.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

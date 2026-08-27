@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Upload Evidence — EvidenceGuard{% endblock %}
+{% block page_title %}Upload Evidence{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-panel">
+      <form method="POST" action="{{ url_for('evidence.upload') }}" enctype="multipart/form-data">
+        <label class="dropzone" for="evidence_file">
+          <div class="dropzone-icon">&#8593;</div>
+          <div style="font-weight:600;">Drag and drop a file, or click to browse</div>
+          <div class="form-text-hint" id="selected-file-name">No file selected</div>
+        </label>
+        <input type="file" id="evidence_file" name="evidence_file" class="d-none" required>
+
+        <div class="mb-3 mt-4">
+          <label class="form-label" for="case_reference">Case Reference <span class="text-muted-forensic">(optional)</span></label>
+          <input type="text" class="form-control" id="case_reference" name="case_reference" placeholder="e.g. CASE-2026-014">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="description">Description / Remarks</label>
+          <textarea class="form-control" id="description" name="description" rows="3" placeholder="What is this evidence, and where was it obtained?"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-forensic">Register Evidence &amp; Generate SHA-256</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-panel">
+      <h2 class="section-heading" style="margin-top:0;">What happens on upload</h2>
+      <ol style="font-size:13px; color:var(--ink-muted); padding-left:18px; line-height:1.9;">
+        <li>The file is validated (type and size).</li>
+        <li>A SHA-256 hash is computed directly from the upload stream.</li>
+        <li>The file is saved under a randomized filename to prevent collisions and path-traversal.</li>
+        <li>An Evidence ID, the hash, and metadata are stored — this hash becomes the permanent reference point.</li>
+        <li>A chain-of-custody entry ("Registered", "Uploaded") is created automatically.</li>
+      </ol>
+      <h2 class="section-heading">Allowed file types</h2>
+      <p style="font-size:12.5px; color:var(--ink-muted);">
+        Images, PDF/Word/text documents, video, audio, and a few common archive/data formats.
+        Executable and script files are not accepted.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
